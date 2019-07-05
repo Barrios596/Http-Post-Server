@@ -3,10 +3,12 @@ package org.startrack.postserver
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.util.*
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
+
 
 class TestServlet : HttpServlet() {
     @Throws(IOException::class, ServletException::class)
@@ -59,7 +61,7 @@ class TestServlet : HttpServlet() {
             httpServletResponse.addHeader("code","1")
         }
         else {
-            FileOutputStream("upload\\$fileTime$fileType").use { fos ->
+            FileOutputStream("upload\\${getTimestamp(fileTime).time}$fileType").use { fos ->
                 fos.write(content)
                 fos.close()
             }
@@ -95,6 +97,22 @@ class TestServlet : HttpServlet() {
             e.printStackTrace()
         }
         return body
+    }
+
+    private fun getTimestamp(fileTime: String): Date {
+        val c = Calendar.getInstance()
+
+        c.set(Calendar.ZONE_OFFSET, 0)
+        c.set(Calendar.YEAR, fileTime.substring(2,4).toInt(16) + 2000)
+        c.set(Calendar.MONTH, fileTime.substring(4,6).toInt(16) - 1)
+        c.set(Calendar.DAY_OF_MONTH, fileTime.substring(6,8).toInt(16))
+        c.set(Calendar.HOUR_OF_DAY, fileTime.substring(8,10).toInt(16))
+        c.set(Calendar.MINUTE, fileTime.substring(10,12).toInt(16))
+        c.set(Calendar.MILLISECOND, fileTime.substring(12,14).toInt(16))
+
+        println(c.time)
+        println(c.timeInMillis)
+        return c.time
     }
 
 }
