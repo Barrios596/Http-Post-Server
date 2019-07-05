@@ -20,7 +20,6 @@ class TestServlet : HttpServlet() {
         println("got POST request")
 
         val type = httpServletRequest.getParameter("type")
-        val fileTermination = if (type == "1") ".png" else ".mp4"
         println("type: $type")
 
         val headerNames = httpServletRequest.headerNames
@@ -60,13 +59,13 @@ class TestServlet : HttpServlet() {
             httpServletResponse.addHeader("code","1")
         }
         else {
-            FileOutputStream("$fileId$fileTermination").use { fos ->
+            FileOutputStream("upload\\$fileTime$fileType").use { fos ->
                 fos.write(content)
                 fos.close()
             }
             httpServletResponse.addHeader("code", "0")
         }
-        httpServletResponse.addHeader("ext", fileTermination)
+        httpServletResponse.addHeader("ext", fileId)
         httpServletResponse.addHeader("md5", fileMd5)
     }
 
