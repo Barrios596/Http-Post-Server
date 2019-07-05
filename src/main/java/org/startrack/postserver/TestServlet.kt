@@ -3,12 +3,12 @@ package org.startrack.postserver
 import java.io.ByteArrayOutputStream
 import java.io.FileOutputStream
 import java.io.IOException
+import java.security.MessageDigest
 import java.util.*
 import javax.servlet.ServletException
 import javax.servlet.http.HttpServlet
 import javax.servlet.http.HttpServletRequest
 import javax.servlet.http.HttpServletResponse
-
 
 class TestServlet : HttpServlet() {
     @Throws(IOException::class, ServletException::class)
@@ -67,8 +67,19 @@ class TestServlet : HttpServlet() {
             }
             httpServletResponse.addHeader("code", "0")
         }
+
+        val md = MessageDigest.getInstance("MD5")
+        md.update(content)
+        val digest = md.digest()
+        val sb = StringBuffer()
+        for (b in digest) {
+            sb.append(String.format("%02x", b.toInt() and 0xff))
+        }
+
+        println("generated md5: $sb")
+
         httpServletResponse.addHeader("ext", fileId)
-        httpServletResponse.addHeader("md5", fileMd5)
+        httpServletResponse.addHeader("md5", sb.toString())
     }
 
     private fun readBody(req: HttpServletRequest): ByteArray? {
