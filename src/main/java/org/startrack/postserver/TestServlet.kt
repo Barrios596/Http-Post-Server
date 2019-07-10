@@ -1,6 +1,7 @@
 package org.startrack.postserver
 
 import java.io.ByteArrayOutputStream
+import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 import java.security.MessageDigest
@@ -19,7 +20,7 @@ class TestServlet : HttpServlet() {
 
     @Throws(ServletException::class, IOException::class)
     public override fun doPost(httpServletRequest: HttpServletRequest, httpServletResponse: HttpServletResponse) {
-        println("got POST request")
+        println("${Date()} - got POST request")
 
         val type = httpServletRequest.getParameter("type")
         println("type: $type")
@@ -32,40 +33,25 @@ class TestServlet : HttpServlet() {
         }
 
         val fileTime =  httpServletRequest.getHeader("filetime")
-        if (fileTime != null) {
-            println("filetime: $fileTime")
-        }
-
         val imei =  httpServletRequest.getHeader("imei")
-        if (imei != null) {
-            println("imei: $imei")
-        }
-
         val fileType =  httpServletRequest.getHeader("fileType")
-        if (fileType != null) {
-            println("fileType: $fileType")
-        }
-
         val fileMd5 =  httpServletRequest.getHeader("fileMD5")
-        if (fileMd5 != null) {
-            println("fileMD5: $fileMd5")
-        }
-
         val fileId =  httpServletRequest.getHeader("fileId")
-        if (fileId != null) {
-            println("fileId: $fileId")
-        }
 
         val content = readBody(httpServletRequest)
-        if (content!!.isEmpty()) {
-            httpServletResponse.addHeader("code","1")
-        }
-        else {
-            FileOutputStream("upload\\${getTimestamp(fileTime).time}$fileType").use { fos ->
-                fos.write(content)
-                fos.close()
+        if (content != null) {
+            println("debug 1")
+            if (content.isEmpty()) {
+                httpServletResponse.addHeader("code","1")
             }
-            httpServletResponse.addHeader("code", "0")
+            else {
+                println("upload${File.separator}${getTimestamp(fileTime).time}$fileType")
+                FileOutputStream("upload${File.separator}${getTimestamp(fileTime).time}$fileType").use { fos ->
+                    fos.write(content)
+                    fos.close()
+                }
+                httpServletResponse.addHeader("code", "0")
+            }
         }
 
         val md = MessageDigest.getInstance("MD5")
@@ -76,7 +62,7 @@ class TestServlet : HttpServlet() {
             sb.append(String.format("%02x", b.toInt() and 0xff))
         }
 
-        println("generated md5: $sb")
+        println("generated md5: $sb\n")
 
         httpServletResponse.addHeader("ext", fileId)
         httpServletResponse.addHeader("md5", sb.toString())
