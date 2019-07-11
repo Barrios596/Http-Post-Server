@@ -64,7 +64,7 @@ class TestServlet : HttpServlet() {
 
         println("generated md5: $sb\n")
 
-        httpServletResponse.addHeader("ext", fileId)
+        httpServletResponse.addHeader("type", type)
         httpServletResponse.addHeader("md5", sb.toString())
     }
 
