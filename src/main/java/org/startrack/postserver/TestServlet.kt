@@ -43,6 +43,7 @@ class TestServlet : HttpServlet() {
             println("debug 1")
             if (content.isEmpty()) {
                 httpServletResponse.addHeader("code","1")
+                httpServletResponse.status = HttpServletResponse.SC_NO_CONTENT
             }
             else {
                 println("upload${File.separator}${getTimestamp(fileTime).time}$fileType")
@@ -51,6 +52,7 @@ class TestServlet : HttpServlet() {
                     fos.close()
                 }
                 httpServletResponse.addHeader("code", "0")
+                httpServletResponse.status = HttpServletResponse.SC_OK
             }
         }
 
@@ -66,6 +68,9 @@ class TestServlet : HttpServlet() {
 
         httpServletResponse.addHeader("type", type)
         httpServletResponse.addHeader("md5", sb.toString())
+        httpServletResponse.writer.write("OK")
+        httpServletResponse.writer.flush()
+        httpServletResponse.writer.close()
     }
 
     private fun readBody(req: HttpServletRequest): ByteArray? {
