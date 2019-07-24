@@ -33,44 +33,42 @@ class TestServlet : HttpServlet() {
         }
 
         val fileTime =  httpServletRequest.getHeader("filetime")
-        val imei =  httpServletRequest.getHeader("imei")
         val fileType =  httpServletRequest.getHeader("fileType")
-        val fileMd5 =  httpServletRequest.getHeader("fileMD5")
-        val fileId =  httpServletRequest.getHeader("fileId")
 
         val content = readBody(httpServletRequest)
-        if (content != null) {
-            println("debug 1")
+        httpServletResponse.writer.write("{\n" +
+                "\"code\":")
+
+        val md5 = if (content != null) {
             if (content.isEmpty()) {
                 httpServletResponse.addHeader("code","1")
-                httpServletResponse.status = HttpServletResponse.SC_NO_CONTENT
+                httpServletResponse.writer.write("1,\n")
             }
             else {
+                httpServletResponse.writer.write("0,\n")
                 println("upload${File.separator}${getTimestamp(fileTime).time}$fileType")
                 FileOutputStream("upload${File.separator}${getTimestamp(fileTime).time}$fileType").use { fos ->
                     fos.write(content)
                     fos.close()
                 }
                 httpServletResponse.addHeader("code", "0")
-                httpServletResponse.status = HttpServletResponse.SC_OK
             }
+            encode16md5(content)
         }
-
-        val md = MessageDigest.getInstance("MD5")
-        md.update(content)
-        val digest = md.digest()
-        val sb = StringBuffer()
-        for (b in digest) {
-            sb.append(String.format("%02x", b.toInt() and 0xff))
+        else {
+            httpServletResponse.writer.write("1,\n")
+            ""
         }
-
-        println("generated md5: $sb\n")
+        println("generated md5: $md5\n")
 
         httpServletResponse.addHeader("type", type)
-        httpServletResponse.addHeader("md5", sb.toString())
-        httpServletResponse.writer.write("OK")
+        httpServletResponse.addHeader("md5", "\"$md5\"")
+        httpServletResponse.writer.write("\"type\":$type,\n" +
+                "\"md5\":\"$md5\"\n" +
+                "}")
         httpServletResponse.writer.flush()
         httpServletResponse.writer.close()
+
     }
 
     private fun readBody(req: HttpServletRequest): ByteArray? {
@@ -115,6 +113,26 @@ class TestServlet : HttpServlet() {
         println(c.time)
         println(c.timeInMillis)
         return c.time
+    }
+
+    private fun encode16md5(input: ByteArray): String {
+        try {
+            val md = MessageDigest.getInstance("MD5")
+            md.update(input)
+            val byteResult = md.digest()
+            val sb = StringBuffer()
+            for (b in byteResult) {
+                val bt = b.toInt() and 0xFF
+                if (bt < 16)
+                    sb.append(0)
+                sb.append(Integer.toHexString(bt))
+            }
+            return sb.toString().substring(8, 24)
+        }
+        catch (e: Exception) {
+            e.printStackTrace()
+        }
+        return ""
     }
 
 }
