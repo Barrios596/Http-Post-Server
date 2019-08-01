@@ -40,24 +40,22 @@ class TestServlet : HttpServlet() {
                 "\"code\":")
 
         val md5 = if (content != null) {
-            if (content.isEmpty()) {
-                httpServletResponse.addHeader("code","1")
-                httpServletResponse.writer.write("1,\n")
-            }
-            else {
-                httpServletResponse.writer.write("0,\n")
-                println("upload${File.separator}${getTimestamp(fileTime).time}$fileType")
-                FileOutputStream("upload${File.separator}${getTimestamp(fileTime).time}$fileType").use { fos ->
-                    fos.write(content)
-                    fos.close()
-                }
-                httpServletResponse.addHeader("code", "0")
-            }
+            httpServletResponse.writer.write("0,\n")
+            httpServletResponse.addHeader("code", "0")
             encode16md5(content)
         }
         else {
+            httpServletResponse.addHeader("code","1")
+            httpServletResponse.writer.write("1,\n")
             httpServletResponse.writer.write("1,\n")
             ""
+        }
+        if (md5.isNotEmpty()) {
+            println("upload${File.separator}$md5$fileType")
+            FileOutputStream("upload${File.separator}$md5$fileType").use { fos ->
+                fos.write(content)
+                fos.close()
+            }
         }
         println("generated md5: $md5\n")
 
@@ -77,11 +75,6 @@ class TestServlet : HttpServlet() {
             val input = req.inputStream
             val output = ByteArrayOutputStream()
 
-            val sizeStr = req.getHeader("fileSize")
-            val size = if (sizeStr != null)
-                Integer.parseInt(sizeStr)
-            else
-                Integer.parseInt(req.getHeader("content-length"))
             var recvsize = 0
             val buff = ByteArray(10240)
             var b = input.read(buff)
